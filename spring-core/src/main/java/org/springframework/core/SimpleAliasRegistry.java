@@ -33,9 +33,9 @@ import org.springframework.util.StringValueResolver;
 /**
  * Simple implementation of the {@link AliasRegistry} interface.
  * <p>Serves as base class for
- * {@link org.springframework.beans.factory.support.BeanDefinitionRegistry}
+ * {link org.springframework.beans.factory.support.BeanDefinitionRegistry}
  * implementations.
- *
+ * 定义map作为alias的缓存，并对接口aliasRegistry进行实现
  * @author Juergen Hoeller
  * @author Qimiao Chen
  * @since 2.5.2
@@ -54,6 +54,7 @@ public class SimpleAliasRegistry implements AliasRegistry {
 		Assert.hasText(name, "'name' must not be empty");
 		Assert.hasText(alias, "'alias' must not be empty");
 		synchronized (this.aliasMap) {
+			// 如果beanName与alias相同的话不记录alias，并删除alias
 			if (alias.equals(name)) {
 				this.aliasMap.remove(alias);
 				if (logger.isDebugEnabled()) {
@@ -67,6 +68,7 @@ public class SimpleAliasRegistry implements AliasRegistry {
 						// An existing alias - no need to re-register
 						return;
 					}
+					// 如果alias不允许被覆盖则抛出异常
 					if (!allowAliasOverriding()) {
 						throw new IllegalStateException("Cannot define alias '" + alias + "' for name '" +
 								name + "': It is already registered for name '" + registeredName + "'.");
@@ -76,6 +78,7 @@ public class SimpleAliasRegistry implements AliasRegistry {
 								registeredName + "' with new target name '" + name + "'");
 					}
 				}
+				// 如果别名关系中存在环式结构，则会抛出异常，如A-B，同时出现B-A会报异常
 				checkForAliasCircle(name, alias);
 				this.aliasMap.put(alias, name);
 				if (logger.isTraceEnabled()) {
@@ -185,6 +188,8 @@ public class SimpleAliasRegistry implements AliasRegistry {
 	}
 
 	/**
+	 * 进行名字的规范化，其实就是获取原始名字，如果是别名就从映射中取原始名
+	 *
 	 * Check whether the given name points back to the given alias as an alias
 	 * in the other direction already, catching a circular reference upfront
 	 * and throwing a corresponding IllegalStateException.
@@ -202,6 +207,8 @@ public class SimpleAliasRegistry implements AliasRegistry {
 	}
 
 	/**
+	 * 确定原始的名字，处理别名到原始的名字
+	 *
 	 * Determine the raw name, resolving aliases to canonical names.
 	 * @param name the user-specified name
 	 * @return the transformed name
@@ -211,6 +218,7 @@ public class SimpleAliasRegistry implements AliasRegistry {
 		// Handle aliasing...
 		String resolvedName;
 		do {
+			// 将别名解析成真正的beanName
 			resolvedName = this.aliasMap.get(canonicalName);
 			if (resolvedName != null) {
 				canonicalName = resolvedName;

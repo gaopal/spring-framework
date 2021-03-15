@@ -133,6 +133,7 @@ public abstract class ClassUtils {
 
 		// Map entry iteration is less expensive to initialize than forEach with lambdas
 		for (Map.Entry<Class<?>, Class<?>> entry : primitiveWrapperTypeMap.entrySet()) {
+			// key和value互换
 			primitiveTypeToWrapperMap.put(entry.getValue(), entry.getKey());
 			registerCommonClasses(entry.getKey());
 		}
@@ -529,6 +530,9 @@ public abstract class ClassUtils {
 	}
 
 	/**
+	 * 比较两个class类，是不是相同或者是子类，即rhsType是不是lhstype的子类或者同类
+	 * a.isAssignableFrom(b),b是不是a的同类或者子类
+	 *
 	 * Check if the right-hand side type may be assigned to the left-hand side
 	 * type, assuming setting by reflection. Considers primitive wrapper
 	 * classes as assignable to the corresponding primitive types.
@@ -846,7 +850,7 @@ public abstract class ClassUtils {
 	 * Check whether the given object is a CGLIB proxy.
 	 * @param object the object to check
 	 * @see #isCglibProxyClass(Class)
-	 * @see org.springframework.aop.support.AopUtils#isCglibProxy(Object)
+	 * see org.springframework.aop.support.AopUtils#isCglibProxy(Object)
 	 * @deprecated as of 5.2, in favor of custom (possibly narrower) checks
 	 */
 	@Deprecated
@@ -888,12 +892,15 @@ public abstract class ClassUtils {
 	}
 
 	/**
+	 * 找出用户定义的类型
+	 *
 	 * Return the user-defined class for the given class: usually simply the given
 	 * class, but the original class in case of a CGLIB-generated subclass.
 	 * @param clazz the class to check
 	 * @return the user-defined class
 	 */
 	public static Class<?> getUserClass(Class<?> clazz) {
+		// 如果包含CGLIB的名字符号，尝试获取父类
 		if (clazz.getName().contains(CGLIB_CLASS_SEPARATOR)) {
 			Class<?> superclass = clazz.getSuperclass();
 			if (superclass != null && superclass != Object.class) {
@@ -1243,7 +1250,7 @@ public abstract class ClassUtils {
 	 * if there is one. E.g. the method may be {@code IFoo.bar()} and the
 	 * target class may be {@code DefaultFoo}. In this case, the method may be
 	 * {@code DefaultFoo.bar()}. This enables attributes on that method to be found.
-	 * <p><b>NOTE:</b> In contrast to {@link org.springframework.aop.support.AopUtils#getMostSpecificMethod},
+	 * <p><b>NOTE:</b> In contrast to {link org.springframework.aop.support.AopUtils#getMostSpecificMethod},
 	 * this method does <i>not</i> resolve Java 5 bridge methods automatically.
 	 * Call {@link org.springframework.core.BridgeMethodResolver#findBridgedMethod}
 	 * if bridge method resolution is desirable (e.g. for obtaining metadata from
@@ -1283,6 +1290,8 @@ public abstract class ClassUtils {
 	}
 
 	/**
+	 * 尝试从自身或者父类获取接口方法
+	 *
 	 * Determine a corresponding interface method for the given method handle, if possible.
 	 * <p>This is particularly useful for arriving at a public exported type on Jigsaw
 	 * which can be reflectively invoked without an illegal access warning.
